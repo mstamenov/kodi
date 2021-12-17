@@ -3,14 +3,16 @@
 import sys
 import os
 from bs4 import BeautifulSoup
+import codecs
 
-import urllib, urllib2, os
-import BaseHTTPServer
+import urllib.parse, os
+import http.server
 import gzip
-from StringIO import StringIO
+from io import StringIO
 import re
 import imp
-from httplib import *
+from http.client import *
+
 
 try:
   import xbmc
@@ -57,8 +59,8 @@ def log_my(*msg):
     #xbmc.log((u"*** %s" % (msg,)).encode('utf-8'),level=xbmc.LOGERROR)
   else:
     for m in msg:
-      print m,
-    print
+      print (m),
+    print()
 
 def get_search_string (item):
   search_string = item['title']
@@ -67,6 +69,9 @@ def get_search_string (item):
     search_string = item['mansearchstr']
     return search_string
 
+  if not isinstance(search_string, str):
+    search_string = codecs.decode(search_string, 'utf-8')
+  
   for name_clean in movie_name_re:
     search_string = re.sub(name_clean, '', search_string)
 
@@ -82,6 +87,7 @@ def get_search_string (item):
         break
 
   if item['tvshow']:
+    item['tvshow'] = str(item['tvshow'], encoding='utf-8', errors='ignore')
     if item['season'] and item['episode']:
       search_string = re.sub(r'\s+(.\d{1,2}.*?\d{2}[\s\S]*)$', '', item['tvshow'])
       if int(item['season']) == 0:
@@ -102,13 +108,13 @@ def update(name, act_ev, dat, crash=None):
   payload['ec'] = name
   payload['ea'] = act_ev
   payload['ev'] = '1'
-  payload['dl'] = urllib.quote_plus(dat.encode('utf-8'))
+  payload['dl'] = urllib.parse.quote_plus(dat.encode('utf-8'))
   if run_from_xbmc == True:
     payload['an'] = xbmcaddon.Addon().getAddonInfo('name')
     payload['av'] = xbmcaddon.Addon().getAddonInfo('version')
     ga().update(payload, crash)
   else:
-    print payload
+    print(payload)
 
 def get_info(it):
   str = 'Fps:{0} Cd:{1} - {2}'.format(it['fps'], it['cds'], it['info'])

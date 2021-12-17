@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from nsub import log_my, savetofile, list_key
+from io import BytesIO
+from nsub import log_my, list_key
 from common import *
+from urllib.parse import urlencode, quote_plus
 
 values = {'m':'',
           'a':'',
@@ -41,8 +43,9 @@ def get_id_url_n(txt, list):
     else:
       yr = 'n/s'
 
+    encodedLink = link.get('title').encode('utf-8', 'replace').decode('utf-8')
     list.append({'url': link['href'],
-              'info': re.sub(clean_str, " ", link.get('title').encode('utf-8', 'replace')),
+              'info': re.sub(clean_str, " ", encodedLink),
               'year': yr,
               'cds': t[0].string.encode('utf-8', 'replace'),
               'fps': t[1].string.encode('utf-8', 'replace'),
@@ -63,16 +66,16 @@ def read_sub (mov, year):
   values['m'] = mov
   values['y'] = year
 
-  enc_values = urllib.urlencode(values)
+  enc_values = urlencode(values).encode('utf-8')
   log_my('Url: ', (url), 'Headers: ', (headers), 'Values: ', (enc_values))
 
-  request = urllib2.Request(url + '/search.php', enc_values, headers)
+  request = urllib.request.Request(url + '/search.php', enc_values, headers)
 
-  response = urllib2.urlopen(request)
-  log_my(response.code, BaseHTTPServer.BaseHTTPRequestHandler.responses[response.code][0])
+  response = urllib.request.urlopen(request)
+  #log_my(response.code, BaseHTTPServer.BaseHTTPRequestHandler.responses[response.code][0])
 
   if response.info().get('Content-Encoding') == 'gzip':
-    buf = StringIO(response.read())
+    buf = BytesIO(response.read())
     f = gzip.GzipFile(fileobj=buf)
     data = f.read()
     f.close()
@@ -91,11 +94,11 @@ def read_sub (mov, year):
 
 def get_sub(id, sub_url, filename):
   s = {}
-  enc_values = urllib.urlencode(values)
+  enc_values = urlencode(values).encode('utf-8')
   headers['Referer'] = url + '/search.php?'
-  request = urllib2.Request(url + sub_url, enc_values, headers)
-  response = urllib2.urlopen(request)
-  log_my(response.code, BaseHTTPServer.BaseHTTPRequestHandler.responses[response.code][0])
+  request = urllib.request.Request(url + sub_url, enc_values, headers)
+  response = urllib.request.urlopen(request)
+  
   s['data'] = response.read()
   s['fname'] = response.info()['Content-Disposition'].split('filename=')[1].strip('"')
   return s

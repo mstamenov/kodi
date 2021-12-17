@@ -6,6 +6,7 @@ import os
 from common import *
 import unacs
 import subs_sab
+import xbmc
 
 def select_1(list):
   l = []
@@ -19,7 +20,7 @@ def select_1(list):
 
 def read_sub(*items):
   l = []
-
+  
   update(os.path.basename(items[0]['file_original_path']),
           'subs_search',
           'title:%(title)s,tvshow:%(tvshow)s,season:%(season)s,episode:%(episode)s' % items[0]
@@ -118,7 +119,7 @@ if __name__ == "__main__":
       in_dat = '%(num)d -> T:%(tvshow)s S:%(season)s E:%(episode)s' % item
     else:
       in_dat = '%(num)d -> T:%(title)s' % item
-    print in_dat
+    print(in_dat)
 
     l = read_sub(item)
     if l is not None:
@@ -129,7 +130,7 @@ if __name__ == "__main__":
       log_my(l[-1]['url'])
       r=get_sub(l[-1]['id'], l[-1]['url'], None)
       if (r.has_key('data') and r.has_key('fname')):
-        print r['data'][:4]
+        print(r['data'][:4])
         savetofile(r['data'], r['fname'])
 
   savetofile(tmp, 'out.txt')
