@@ -10,6 +10,7 @@
     <import addon="script.module.html5lib" version="0.999.0"/>
     <import addon="script.module.simplejson" version="3.3.0"/>
     <import addon="vfs.rar" version="3.0.0"/>
+    <import addon="vfs.libarchive" version="2.0.0"/> 
   </requires>
   <extension point="xbmc.subtitle.module"
              library="service.py" />

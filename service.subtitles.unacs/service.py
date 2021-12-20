@@ -24,7 +24,7 @@ __language__   = __addon__.getLocalizedString
 __cwd__        = str(xbmcvfs.translatePath( __addon__.getAddonInfo('path')))
 __profile__    = str(xbmcvfs.translatePath( __addon__.getAddonInfo('profile')))
 __resource__   = str(xbmcvfs.translatePath( os.path.join( __cwd__, 'resources', 'lib' )))
-__temp__       = str(xbmcvfs.translatePath( os.path.join( __profile__, 'temp', '')))
+__temp__       = xbmcvfs.translatePath( os.path.join( __profile__, 'temp', ''))
 __name_dict__  = str(xbmcvfs.translatePath( os.path.join( __cwd__, 'resources', 'lib', 'dict.json' )))
 
 sys.path.append (__resource__)
@@ -57,7 +57,13 @@ def isRar(file):
   name, ext = os.path.splitext(filename)
   return ext in exts
 
-def extract_archive(archiveFile):
+def isZip(file):
+  exts = [".zip"]
+  filename = os.path.basename(file.lower())
+  name, ext = os.path.splitext(filename)
+  return ext in exts
+
+def extract_rar(archiveFile):
     newList = []
     path = urllib.parse.quote_plus(archiveFile)
     (dirs, files) = xbmcvfs.listdir('rar://%s' % (path))
@@ -76,6 +82,20 @@ def extract_archive(archiveFile):
     
     return newList
 
+def extract_zip(archiveFile):
+    newList = []
+    logInfo(u'ZIP found: ' + archiveFile)
+    path = urllib.parse.quote_plus(archiveFile)
+    _, files = xbmcvfs.listdir('archive://%s' % (path))
+    for f in files:
+        if not isSubFile(f): 
+            continue
+        src = 'archive://' + path + '/' + f
+        dest = os.path.join(__temp__, f)
+        xbmcvfs.copy(src, dest)
+        logInfo(u'Extracted: ' + dest)
+        newList.append(dest)
+    return newList
 
 def namesubst(str):
   with open(__name_dict__, 'rb') as fd:
@@ -95,7 +115,12 @@ def rmtree(path):
     rmtree(os.path.join(path, dir))
 
   for file in files:
-    xbmcvfs.delete(os.path.join(path, file))
+    if not isinstance(file, str):
+        file = codecs.decode(file, 'utf-8')
+    if not isinstance(path, str):
+        path = codecs.decode(path, 'utf-8')
+    fileForRemove = os.path.join(path, file) 
+    xbmcvfs.delete(fileForRemove)
 
   xbmcvfs.rmdir(path)
 
@@ -114,11 +139,14 @@ def Search(item):
     log_my(sub_data)
     for it in sub_data:
       listitem = xbmcgui.ListItem(label="Bulgarian",               # language name for the found subtitle
-                                label2=get_info(it)               # file name for the found subtitle
+                                label2=get_info(it)                # file name for the found subtitle
                                 #iconImage=str(int(round(float(it['rating'])))), # rating for the subtitle, string 0-5
                                 #thumbnailImage="bg"          # language flag, ISO_639_1 language + gif extention, e.g - "en.gif"
                                 )
 
+      listitem.setArt(
+            {'thumb': xbmc.convertLanguage(u"bg", xbmc.ISO_639_1)}
+        )
       listitem.setProperty( "sync",        '{0}'.format("false").lower() )  # set to "true" if subtitle is matched by hash,
                                                                          # indicates that sub is 100 Comaptible
 
@@ -151,7 +179,10 @@ def appendsubfiles(subtitle_list, basedir, files):
     elif isSubFile(file):
       subtitle_list.append(file.encode('utf-8'))
     elif isRar(file):
-        archivedSubtitles = extract_archive(file)
+        archivedSubtitles = extract_rar(file)
+        subtitle_list.extend(archivedSubtitles)
+    elif isZip(file):
+        archivedSubtitles = extract_zip(file)
         subtitle_list.extend(archivedSubtitles)
     return subtitle_list
 
@@ -161,6 +192,7 @@ def Download(id,url,filename, stack=False):
   ## pass that to XBMC to copy and activate
   if xbmcvfs.exists(__temp__):
     logInfo(u"Cleaning up temp folder")
+    rmtree(__temp__)
     try:
       rmtree(__temp__)
     except:
@@ -168,7 +200,7 @@ def Download(id,url,filename, stack=False):
       pass
   xbmcvfs.mkdirs(__temp__)
 
-  logInfo(u"Downloading subtitle {0}".format(filename))  
+  logInfo(u"Downloading subtitle %s" % (filename))  
   sub=get_sub(id, url, filename)
 
   if ('data' in sub and 'fname' in sub):

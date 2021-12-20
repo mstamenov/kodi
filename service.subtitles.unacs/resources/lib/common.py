@@ -12,6 +12,7 @@ from io import StringIO
 import re
 import imp
 from http.client import *
+import codecs
 
 
 try:
@@ -117,8 +118,15 @@ def update(name, act_ev, dat, crash=None):
     print(payload)
 
 def get_info(it):
-  str = 'Fps:{0} Cd:{1} - {2}'.format(it['fps'], it['cds'], it['info'])
-  return re.sub("  ", " ", str)
+  fps = it['fps']
+  cds = it['cds']
+  if not isinstance(fps, str):
+    fps = codecs.decode(fps, 'utf-8')
+  if not isinstance(cds, str):
+    cds = codecs.decode(cds, 'utf-8')
+
+  str1 = 'Fps:{0} Cd:{1} - {2}'.format(fps, cds, it['info'])
+  return re.sub("  ", " ", str1)
 
 def savetofile(d, name):
   if run_from_xbmc == False:
