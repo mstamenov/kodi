@@ -8,6 +8,11 @@ import unacs
 import subs_sab
 import xbmc
 
+def log(msg, level):
+  xbmc.log(u"service.subtitles.unacs.nsub: " + str(msg), level)
+def logInfo(msg):
+  log(msg, xbmc.LOGINFO)
+
 def select_1(list):
   l = []
   ls = []
@@ -27,9 +32,11 @@ def read_sub(*items):
           )
 
   for item in items:
+    
     search_str = get_search_string(item)
     try:
       ll = unacs.read_sub(search_str, item['year'])
+      logInfo('unacs: %s' % ll)
       if ll:
         l.extend(ll)
     except Exception as e:
@@ -39,12 +46,13 @@ def read_sub(*items):
               'title:%(title)s,tvshow:%(tvshow)s,season:%(season)s,episode:%(episode)s' % item,
               sys.exc_info()
               )
-
     try:
       ll = subs_sab.read_sub(search_str, item['year'])
+      logInfo('sab: %s' % ll)
       if ll:
         l.extend(ll)
     except Exception as e:
+      logInfo('sab: %s' % e)
       log_my('subs_sab.read_sub', str(e))
       update(os.path.basename(item['file_original_path']),
               'exception',

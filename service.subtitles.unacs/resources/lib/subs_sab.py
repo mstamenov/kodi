@@ -2,6 +2,7 @@
 
 from nsub import log_my, savetofile, list_key
 from common import *
+import xbmc
 
 values = {'movie':'',
           'act':'search',
@@ -26,19 +27,21 @@ def get_id_url_n(txt, list):
   for link in soup.find_all('a', href=re.compile(r'[\S]attach_id=(?:\d+)')):
     p = link.find_parent('td')
     t = p.find_next_siblings('td', text=True)
-
+    
     y = p.get_text()
     if y:
       yr = y.split('(')[1].split(')')[0]
     else:
       yr = 'n/s'
 
+    encodedLink = link.get('onmouseover').encode('utf-8', 'replace').decode('utf-8')
+    
     list.append({'url': link['href'].split('attach_id=')[1],
-                'info': re.sub(clean_str, " ", link.get('onmouseover').encode('utf-8', 'replace')),
+                'info': re.sub(clean_str, " ", encodedLink),
                 'year': yr,
                 'cds': t[2].string.encode('utf-8', 'replace'),
                 'fps': t[3].string.encode('utf-8', 'replace'),
-                'rating': link.find_parent('tr').find(href='#').img.get('alt').split(':')[1].strip(),
+                'rating': '0.0',
                 'id': __name__})
 
   return
@@ -49,6 +52,11 @@ def get_data(l, key):
     out.append(d[key])
   return out
 
+def log(msg, level):
+  xbmc.log(u"service.subtitles.unacs.sab: " + str(msg), level)
+def logInfo(msg):
+  log(msg, xbmc.LOGINFO)
+
 def read_sub (mov, year):
   list = []
   log_my(mov, year)
@@ -56,14 +64,14 @@ def read_sub (mov, year):
   values['movie'] = mov
   values['yr'] = year
 
-  enc_values = urllib.urlencode(values)
+  enc_values = urllib.parse.urlencode(values)
   log_my('Url: ', (url), 'Headers: ', (head), 'Values: ', (enc_values))
 
   connection = HTTPConnection(url)
   connection.request("POST", "/index.php?", headers=head, body=enc_values)
   response = connection.getresponse()
 
-  log_my(response.status, BaseHTTPServer.BaseHTTPRequestHandler.responses[response.status][0])
+  #log_my(response.status, BaseHTTPServer.BaseHTTPRequestHandler.responses[response.status][0])
 
   if response.status == 200 and response.getheader('content-type').split(';')[0] == 'text/html':
     log_my(response.getheaders())
@@ -88,7 +96,7 @@ def get_sub(id, sub_url, filename):
   connection.request("GET", "/index.php?act=download&attach_id="+sub_url, headers=head)
   response = connection.getresponse()
 
-  log_my(response.status, BaseHTTPServer.BaseHTTPRequestHandler.responses[response.status][0])
+  #log_my(response.status, BaseHTTPServer.BaseHTTPRequestHandler.responses[response.status][0])
   log_my(response.getheaders())
 
   if response.status != 200:

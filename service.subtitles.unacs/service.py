@@ -132,6 +132,7 @@ def Search(item):
   it.append(_item)
 
   sub_data = read_sub(*it)
+  
   #### Do whats needed to get the list of subtitles from service site
   #### use item["some_property"] that was set earlier
   #### once done, set xbmcgui.ListItem() below and pass it to xbmcplugin.addDirectoryItem()
@@ -164,7 +165,8 @@ def Search(item):
     
     Notify(str("Server"), str("ok"))
   else:
-    Notify(str('Server'), str('error'))
+    logInfo("No subtitles found for " + str(item['title']))
+    Notify(str('Server'), str('No subtitles found'))
 
 def appendsubfiles(subtitle_list, basedir, files):
   for file in files:
