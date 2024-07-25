@@ -1,16 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addons>
+<addon id="mstamenov-kodi-repo" name="mstamenov kodi repo" version="0.0.1" provider-name="mstamenov">
+    <extension point="xbmc.addon.repository" name="MS addons">
+		<info compressed="false">https://mstamenov.github.io/kodi.repository/matrix/addons.xml</info>
+		<checksum>https://mstamenov.github.io/kodi.repository/matrix/addons.xml.md5</checksum>
+		<datadir zip="true">https://mstamenov.github.io/kodi.repository/matrix</datadir>
+	</extension>
+    <extension point="xbmc.addon.metadata">
+        <summary>MS Kodi Repository</summary>
+        <description>Contains addons for kodi with python3 scripts</description>
+        <disclaimer></disclaimer>
+        <platform>all</platform>
+    </extension>
+</addon>
+
 <addon id="service.subtitles.unacs"
        name="subsunacs/subsab"
-       version="0.0.17h"
+       version="0.0.18h"
        provider-name="kodi1">
   <requires>
-    <import addon="xbmc.python" version="3.0.0" allowed-versions="3.0.0"/> 
+    <import addon="xbmc.python" version="3.0.0" allowed-versions="3.0.0"/>
     <import addon="script.module.beautifulsoup4" version="4.3.2"/>
     <import addon="script.module.requests" version="1.1.0"/>
     <import addon="script.module.html5lib" version="0.999.0"/>
     <import addon="script.module.simplejson" version="3.3.0"/>
     <import addon="vfs.rar" version="3.0.0"/>
-    <import addon="vfs.libarchive" version="2.0.0"/> 
+    <import addon="vfs.libarchive" version="2.0.0"/>
   </requires>
   <extension point="xbmc.subtitle.module"
              library="service.py" />
@@ -24,3 +39,4 @@
     <email></email>
     </extension>
 </addon>
+</addons>

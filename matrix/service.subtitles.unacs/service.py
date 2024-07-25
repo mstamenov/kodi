@@ -12,6 +12,7 @@ import xbmcplugin
 import unicodedata
 import simplejson as j
 import codecs
+import uuid
 
 __addon__ = xbmcaddon.Addon()
 __author__     = __addon__.getAddonInfo('author')
@@ -83,19 +84,8 @@ def extract_rar(archiveFile):
     return newList
 
 def extract_zip(archiveFile):
-    newList = []
-    logInfo(u'ZIP found: ' + archiveFile)
-    path = urllib.parse.quote_plus(archiveFile)
-    _, files = xbmcvfs.listdir('archive://%s' % (path))
-    for f in files:
-        if not isSubFile(f): 
-            continue
-        src = 'archive://' + path + '/' + f
-        dest = os.path.join(__temp__, f)
-        xbmcvfs.copy(src, dest)
-        logInfo(u'Extracted: ' + dest)
-        newList.append(dest)
-    return newList
+    (files, result) = extract_all_libarchive(archiveFile, __temp__)
+    return files
 
 def namesubst(str):
   with open(__name_dict__, 'rb') as fd:
@@ -109,10 +99,7 @@ def rmtree(path):
   if isinstance(path, str):
     path = path.encode('utf-8')
 
-  dirs, files = xbmcvfs.listdir(path)
-
-  for dir in dirs:
-    rmtree(os.path.join(path, dir))
+  _, files = xbmcvfs.listdir(path)
 
   for file in files:
     if not isinstance(file, str):
@@ -122,7 +109,7 @@ def rmtree(path):
     fileForRemove = os.path.join(path, file) 
     xbmcvfs.delete(fileForRemove)
 
-  xbmcvfs.rmdir(path)
+  xbmcvfs.rmdir(path, True)
 
 def Search(item):
   it = []
@@ -194,11 +181,12 @@ def Download(id,url,filename, stack=False):
   ## pass that to XBMC to copy and activate
   if xbmcvfs.exists(__temp__):
     logInfo(u"Cleaning up temp folder")
-    rmtree(__temp__)
     try:
       rmtree(__temp__)
     except:
-      Notify(u'Error cleanup', u'error')
+      # Swallow the error. Nested folders can't be deleted on Windows
+      # Notify(u'Error cleanup', u'error')
+      logError(u"Error cleaning up temp folder")
       pass
   xbmcvfs.mkdirs(__temp__)
 
@@ -259,6 +247,37 @@ def get_params():
         param[splitparams[0]]=splitparams[1]
 
   return param
+
+def extract_all_libarchive(archive_file,directory_to):
+  overall_success = True
+  files_out = list()
+  if 'archive://' in archive_file:
+    archive_path = archive_file
+  else:
+    archive_path = f'archive://{urllib.parse.quote_plus(xbmcvfs.translatePath(archive_file))}'
+  dirs_in_archive, files_in_archive = xbmcvfs.listdir(archive_path)
+
+  for ff in files_in_archive:
+    file_from = os.path.join(archive_path,ff).replace('\\','/')
+    success = xbmcvfs.copy(file_from,os.path.join(xbmcvfs.translatePath(directory_to),ff)) #Attempt to move the file first
+    if not success:
+      logInfo(f'Error extracting file {ff} from archive {archive_file}')
+      overall_success = False
+    else:
+      logInfo(f'Extracted file {ff} from archive {archive_file}')
+      files_out.append(os.path.join(xbmcvfs.translatePath(directory_to),ff))
+  for dd in dirs_in_archive:
+    if xbmcvfs.mkdir(os.path.join(xbmcvfs.translatePath(directory_to),dd)):
+      xbmc.log(msg='Created folder %(dd)s for archive %(archive_file)s' % {'dd': os.path.join(xbmcvfs.translatePath(directory_to),dd,''),'archive_file':archive_file}, level=xbmc.LOGDEBUG)
+      files_out2, success2 = extract_all_libarchive(os.path.join(archive_path,dd,'').replace('\\','/'),os.path.join(directory_to,dd))
+      if success2:
+        files_out = files_out + files_out2
+      else:
+        overall_success = False
+    else:
+      overall_success = False
+      xbmc.log(msg='Unable to create the folder %(dir_from)s for libarchive extraction' % {'dir_from': os.path.join(xbmcvfs.translatePath(directory_to),dd)}, level=xbmc.LOGDEBUG)
+  return files_out, overall_success
 
 params = get_params()
 
