@@ -1,14 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="mstamenov-kodi-repo" name="mstamenov kodi repo" version="0.0.1" provider-name="mstamenov">
+<addon id="mstamenov-kodi-repo" name="mstamenov kodi repo" version="0.0.3" provider-name="mstamenov">
     <extension point="xbmc.addon.repository" name="MS addons">
-		<info compressed="false">https://mstamenov.github.io/kodi.repository/matrix/addons.xml</info>
-		<checksum>https://mstamenov.github.io/kodi.repository/matrix/addons.xml.md5</checksum>
-		<datadir zip="true">https://mstamenov.github.io/kodi.repository/matrix</datadir>
+        <dir>
+		    <info compressed="false">https://mstamenov.github.io/mstamenov.repository/matrix/addons.xml</info>
+		    <checksum>https://mstamenov.github.io/mstamenov.repository/matrix/addons.xml.md5</checksum>
+		    <datadir zip="true">https://mstamenov.github.io/mstamenov.repository</datadir>
+        </dir>
 	</extension>
+    
     <extension point="xbmc.addon.metadata">
         <summary>MS Kodi Repository</summary>
         <description>Contains addons for kodi with python3 scripts</description>
         <disclaimer></disclaimer>
         <platform>all</platform>
+        <assets>
+            <icon>icon.png</icon>
+            <fanart>fanart.jpg</fanart>
+        </assets>
     </extension>
 </addon>
